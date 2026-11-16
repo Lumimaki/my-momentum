@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#182523">
+    <title>Stillpoint | New Tab</title>
+    <link rel="stylesheet" href="newtab.css">
+    <script src="newtab.js" defer></script>
+  </head>
+  <body>
+    <main class="dashboard">
+      <header class="topbar">
+        <a class="wordmark" href="#" aria-label="Stillpoint home">stillpoint<span>.</span></a>
+        <div class="date-line" id="date-line" aria-live="polite"></div>
+      </header>
+
+      <section class="hero" aria-label="Daily welcome">
+        <div class="clock" id="clock" aria-label="Current time">--:--</div>
+        <div class="greeting-row">
+          <p class="greeting" id="greeting">A new day is yours.</p>
+          <label class="name-wrap">
+            <span class="visually-hidden">Your name</span>
+            <input id="name-input" type="text" maxlength="32" placeholder="Your name" autocomplete="given-name">
+          </label>
+        </div>
+        <p class="date-caption" id="date-caption"></p>
+      </section>
+
+      <section class="workspace" aria-label="Daily focus workspace">
+        <article class="panel focus-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">ONE THING AT A TIME</p>
+              <h1>Today's focus</h1>
+            </div>
+            <span class="sun-mark" aria-hidden="true">✳</span>
+          </div>
+          <form id="focus-form" class="focus-form">
+            <label class="visually-hidden" for="focus-input">Your main goal for today</label>
+            <input id="focus-input" type="text" maxlength="120" placeholder="What would make today feel meaningful?" autocomplete="off">
+            <button class="text-button" type="submit" aria-label="Save today's focus">Save <span aria-hidden="true">↗</span></button>
+          </form>
+          <p class="saved-focus" id="saved-focus" hidden></p>
+          <div class="divider"></div>
+          <div class="task-heading">
+            <h2>Small steps</h2>
+            <span class="task-count" id="task-count">0</span>
+          </div>
+          <form id="task-form" class="task-form">
+            <label class="visually-hidden" for="task-input">Add a task</label>
+            <input id="task-input" type="text" maxlength="100" placeholder="Add a task..." autocomplete="off">
+            <button class="add-button" type="submit" aria-label="Add task">+</button>
+          </form>
+          <ul class="task-list" id="task-list" aria-label="Today's tasks"></ul>
+          <p class="empty-state" id="empty-state">A little progress is still progress.</p>
+        </article>
+
+        <article class="panel sound-panel">
+          <div class="panel-heading sound-heading">
+            <div>
+              <p class="eyebrow">A LITTLE ATMOSPHERE</p>
+              <h2>Focus sounds</h2>
+            </div>
+            <span class="sound-glyph" aria-hidden="true">♫</span>
+          </div>
+          <div class="sound-modes" role="group" aria-label="Choose a focus sound">
+            <button class="mode-button is-selected" type="button" data-mode="lofi" aria-pressed="true">
+              <span class="mode-icon" aria-hidden="true">◒</span><span>Soft keys</span>
+            </button>
+            <button class="mode-button" type="button" data-mode="rain" aria-pressed="false">
+              <span class="mode-icon" aria-hidden="true">⌁</span><span>Gentle rain</span>
+            </button>
+            <button class="mode-button" type="button" data-mode="brown" aria-pressed="false">
+              <span class="mode-icon" aria-hidden="true">≈</span><span>Deep brown</span>
+            </button>
+          </div>
+          <div class="player-row">
+            <button class="play-button" id="play-button" type="button" aria-label="Play focus sounds" aria-pressed="false">
+              <span id="play-icon" aria-hidden="true">▶</span>
+            </button>
+            <div class="player-copy">
+              <span class="track-name" id="track-name">Soft keys</span>
+              <span class="track-status" id="track-status">A quiet chord loop</span>
+            </div>
+            <div class="equalizer" id="equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <label class="volume-row" for="volume-input">
+            <span aria-hidden="true">◖</span>
+            <span class="visually-hidden">Volume</span>
+            <input id="volume-input" type="range" min="0" max="100" value="38">
+            <output id="volume-value" for="volume-input">38%</output>
+          </label>
+          <p class="audio-note">Sound is created right here in your browser.</p>
+        </article>
+      </section>
+
+      <footer class="footer-line">
+        <span>Make room for what matters.</span>
+        <button id="background-button" class="background-button" type="button" aria-label="Change background" title="Change background">
+          <span aria-hidden="true">◌</span> Change view
+        </button>
+      </footer>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+  </body>
+</html>
