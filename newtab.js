@@ -33,6 +33,13 @@ const elements = {
   volumeValue: document.querySelector('#volume-value'),
   soundPanel: document.querySelector('.sound-panel'),
   backgroundButton: document.querySelector('#background-button'),
+  timerOrbit: document.querySelector('#timer-orbit'),
+  timerDisplay: document.querySelector('#timer-display'),
+  breathingCue: document.querySelector('#breathing-cue'),
+  timerStatus: document.querySelector('#timer-status'),
+  timerStart: document.querySelector('#timer-start'),
+  timerPause: document.querySelector('#timer-pause'),
+  timerReset: document.querySelector('#timer-reset'),
   toast: document.querySelector('#toast')
 };
 
@@ -44,6 +51,13 @@ let activeSources = [];
 let ambientTimer;
 let selectedMode = 'lofi';
 let isPlaying = false;
+let timerDuration = 5 * 60;
+let timerRemaining = timerDuration;
+let timerDeadline;
+let timerInterval;
+let timerRunning = false;
+let breathingElapsed = 0;
+let breathingStartedAt;
 
 function todayKey() {
   const date = new Date();
@@ -305,6 +319,138 @@ function pauseSound() {
   updateSoundControls();
 }
 
+function formatTimer(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+}
+
+function updateTimerDisplay() {
+  const seconds = Math.ceil(timerRemaining);
+  elements.timerDisplay.textContent = formatTimer(seconds);
+  elements.timerDisplay.setAttribute(
+    'aria-label',
+    `${Math.floor(seconds / 60)} minutes ${String(seconds % 60).padStart(2, '0')} seconds remaining`
+  );
+  elements.timerOrbit.classList.toggle('is-active', timerRunning);
+  elements.timerStart.disabled = timerRunning;
+  elements.timerPause.disabled = !timerRunning;
+}
+
+function updateBreathingCue() {
+  if (!timerRunning) return;
+  const phaseTime = (breathingElapsed + (Date.now() - breathingStartedAt) / 1000) % 14;
+  elements.breathingCue.textContent = phaseTime < 4 ? 'Breathe in' : phaseTime < 8 ? 'Hold' : 'Breathe out';
+}
+
+function finishMeditation() {
+  timerRunning = false;
+  timerRemaining = 0;
+  clearInterval(timerInterval);
+  timerInterval = undefined;
+  updateTimerDisplay();
+  elements.breathingCue.textContent = 'Session complete';
+  elements.timerStatus.textContent = 'Your meditation is complete.';
+  void playBowlChime().catch((error) => {
+    showToast(error.message || 'Could not play the meditation chime.');
+  });
+}
+
+function tickTimer() {
+  timerRemaining = Math.max(0, (timerDeadline - Date.now()) / 1000);
+  if (timerRemaining === 0) {
+    finishMeditation();
+    return;
+  }
+  updateTimerDisplay();
+  updateBreathingCue();
+}
+
+function startMeditation() {
+  if (timerRunning) return;
+  try {
+    ensureAudio();
+    void audioContext.resume().catch((error) => {
+      showToast(error.message || 'Could not enable the meditation chime.');
+    });
+  } catch (error) {
+    showToast(error.message || 'Could not enable the meditation chime.');
+  }
+  if (timerRemaining <= 0) {
+    timerRemaining = timerDuration;
+    breathingElapsed = 0;
+  }
+  timerRunning = true;
+  timerDeadline = Date.now() + timerRemaining * 1000;
+  breathingStartedAt = Date.now();
+  elements.timerOrbit.style.setProperty('--breathing-delay', `${-breathingElapsed}s`);
+  elements.timerStatus.textContent = 'Meditation in progress.';
+  updateTimerDisplay();
+  updateBreathingCue();
+  clearInterval(timerInterval);
+  timerInterval = window.setInterval(tickTimer, 200);
+}
+
+function pauseMeditation() {
+  if (!timerRunning) return;
+  timerRemaining = Math.max(0, (timerDeadline - Date.now()) / 1000);
+  if (timerRemaining === 0) {
+    finishMeditation();
+    return;
+  }
+  breathingElapsed = (breathingElapsed + (Date.now() - breathingStartedAt) / 1000) % 14;
+  timerRunning = false;
+  clearInterval(timerInterval);
+  timerInterval = undefined;
+  updateTimerDisplay();
+  elements.breathingCue.textContent = 'Take your time';
+  elements.timerStatus.textContent = 'Meditation paused.';
+}
+
+function resetMeditation(duration = timerDuration) {
+  clearInterval(timerInterval);
+  timerInterval = undefined;
+  timerDuration = duration;
+  timerRemaining = duration;
+  timerRunning = false;
+  breathingElapsed = 0;
+  elements.timerOrbit.style.setProperty('--breathing-delay', '0s');
+  updateTimerDisplay();
+  elements.breathingCue.textContent = 'Ready when you are';
+  elements.timerStatus.textContent = '';
+}
+
+async function playBowlChime() {
+  ensureAudio();
+  await audioContext.resume();
+
+  const startAt = audioContext.currentTime + 0.04;
+  const endAt = startAt + 10;
+  const bowlGain = audioContext.createGain();
+  bowlGain.gain.setValueAtTime(0.0001, startAt);
+  bowlGain.gain.linearRampToValueAtTime(0.22, startAt + 0.08);
+  bowlGain.gain.exponentialRampToValueAtTime(0.0001, endAt);
+  bowlGain.connect(audioContext.destination);
+
+  for (const [frequency, level] of [[220, 0.09], [606, 0.035], [1189, 0.012]]) {
+    const oscillator = audioContext.createOscillator();
+    const partialGain = audioContext.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = frequency;
+    partialGain.gain.value = level;
+    oscillator.connect(partialGain);
+    partialGain.connect(bowlGain);
+    oscillator.addEventListener('ended', () => {
+      oscillator.disconnect();
+      partialGain.disconnect();
+    }, { once: true });
+    oscillator.start(startAt);
+    oscillator.stop(endAt + 0.05);
+  }
+
+  window.setTimeout(() => bowlGain.disconnect(), 10500);
+}
+
 async function initialize() {
   const stored = await readState();
   state = { ...state, ...stored };
@@ -389,4 +535,20 @@ elements.backgroundButton.addEventListener('click', () => {
   void saveState();
 });
 
+document.querySelectorAll('.duration-pill').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.duration-pill').forEach((pill) => {
+      const selected = pill === button;
+      pill.classList.toggle('is-selected', selected);
+      pill.setAttribute('aria-pressed', String(selected));
+    });
+    resetMeditation(Number(button.dataset.duration) * 60);
+  });
+});
+
+elements.timerStart.addEventListener('click', startMeditation);
+elements.timerPause.addEventListener('click', pauseMeditation);
+elements.timerReset.addEventListener('click', () => resetMeditation());
+
+updateTimerDisplay();
 void initialize();

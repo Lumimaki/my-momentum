@@ -93,6 +93,35 @@
           </label>
           <p class="audio-note">Sound is created right here in your browser.</p>
         </article>
+
+        <article class="panel meditation-panel" aria-labelledby="meditation-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">A MOMENT FOR YOU</p>
+              <h2 id="meditation-title">Meditation</h2>
+            </div>
+            <span class="meditation-glyph" aria-hidden="true">◯</span>
+          </div>
+          <div class="timer-orbit" id="timer-orbit">
+            <div class="timer-ring" aria-hidden="true"></div>
+            <div class="timer-face">
+              <span class="timer-display" id="timer-display" role="timer" aria-label="5 minutes remaining" aria-live="off">05:00</span>
+              <span class="breathing-cue" id="breathing-cue">Ready when you are</span>
+            </div>
+          </div>
+          <div class="duration-pills" role="group" aria-label="Meditation duration">
+            <button class="duration-pill is-selected" type="button" data-duration="5" aria-pressed="true">5 min</button>
+            <button class="duration-pill" type="button" data-duration="10" aria-pressed="false">10 min</button>
+            <button class="duration-pill" type="button" data-duration="15" aria-pressed="false">15 min</button>
+            <button class="duration-pill" type="button" data-duration="20" aria-pressed="false">20 min</button>
+          </div>
+          <div class="timer-controls" role="group" aria-label="Meditation timer controls">
+            <button class="timer-button timer-start" id="timer-start" type="button">Start</button>
+            <button class="timer-button" id="timer-pause" type="button" disabled>Pause</button>
+            <button class="timer-button" id="timer-reset" type="button">Reset</button>
+          </div>
+          <p class="timer-status" id="timer-status" role="status" aria-live="polite"></p>
+        </article>
       </section>
 
       <footer class="footer-line">
